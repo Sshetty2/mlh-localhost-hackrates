@@ -1,4 +1,7 @@
 {
+  "engine": {
+    "node": "10.1.0"
+  },
   "name": "reate-my-prof",
   "version": "1.0.0",
   "description": "",
