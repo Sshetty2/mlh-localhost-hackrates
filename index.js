@@ -151,21 +151,19 @@ app.get("/rating/:index", function (req, res) {
 });
 
 app.post("/add", function (req, res) {
-  web3.eth.personal.unlockAccount(account, accountPassword, 28800).then(function() {
-    contractInstance.methods.addRating(
-      parseInt(req.body.projectID),
-      parseInt(req.body.creativity),
-      parseInt(req.body.technicalComplexity),
-      parseInt(req.body.bestPractices)
-    ).send({ from: account, gas: 500000 }, function(error, transactionHash) {
-      if (error) {
-        res.status(500).send(error)	;
-      }
-      else {
-        res.status = 200;
-        res.json({ id: 0 });
-      }
-    });
+  contractInstance.methods.addRating(
+    parseInt(req.body.projectID),
+    parseInt(req.body.creativity),
+    parseInt(req.body.technicalComplexity),
+    parseInt(req.body.bestPractices)
+  ).send({ from: account, gas: 500000 }, function(error, transactionHash) {
+    if (error) {
+      res.status(500).send(error)	;
+    }
+    else {
+      res.status = 200;
+      res.json({ id: 0 });
+    }
   }).catch(function(err) {
     res.status(500).send(err)
   });
