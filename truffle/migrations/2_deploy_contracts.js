@@ -1,5 +1,5 @@
-var hackrates = artifacts.require("./hackrates.sol");
+var HackRates = artifacts.require("./HackRates.sol");
 
 module.exports = function(deployer) {
-    deployer.deploy(hackrates);
+  deployer.deploy(HackRates);
 };
