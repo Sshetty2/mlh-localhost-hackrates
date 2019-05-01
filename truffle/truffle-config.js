@@ -16,14 +16,14 @@ module.exports = {
     //   network_id: "*" // Match any network id
     // },
     poa: {
-      provider: new HDWalletProvider(mnemonic, rpc_endpoint),
+      provider: () => new HDWalletProvider(mnemonic, rpc_endpoint),
       network_id: '10101010',
       gasPrice : 0 // gas is not required in POA
     }
   },
   compilers: {
     solc: {
-      version: "0.4.23",
+      version: "0.4.11",
     }
   }
 };

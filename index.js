@@ -1,175 +1,38 @@
-const Web3 = require('web3');
-var express = require('express');
-var bodyParser = require('body-parser');
-var path = require('path');
-var app = express();
+var ethereumjs = require('ethereumjs-tx')
+var wallet = require('ethereumjs-wallet')
+var Web3 = require('web3')
 
-// RPC endpoint
-var etherUrl = process.env.ETHER_URL || "http://ethirgqw4-dns-reg1.eastus.cloudapp.azure.com:8540";
-// from metamask senders ethereum address
-var account = process.env.ACCOUNT_ADDRESS || "0x03A61f773a412c9dBd99Ae2c4f40dF6380Cc23CE";
-var contract = process.env.CONTRACT_ADDRESS || "0xb0e5015db317b4a7402e9dfa99a04642745b8a79847b01e67152ab2f84a7b25a";
+// TODO Replace with your contract address
+var address = "0xfe53559f5f7a77125039a993e8d5d9c2901edc58";
+var abi = [{"constant": false,"inputs": [{"name": "text","type": "string"}],"name": "postMsg","outputs": [],"payable": false,"stateMutability": "nonpayable","type": "function"},{"constant": true,"inputs": [],"name": "getMsg","outputs": [{"name": "","type": "string"}],"payable": false,"stateMutability": "view","type": "function"}];
 
-var httpPort = process.env.PORT || 3000;
-var web3 = new Web3();
-web3.setProvider(new web3.providers.HttpProvider(etherUrl));
+// Generate a new Ethereum account
+var account = wallet.generate();
+var accountAddress = account.getAddressString()
+var privateKey = account.getPrivateKey();
 
-app.use(bodyParser.urlencoded({
-    extended: true
-}));
+// TODO Replace with your RPC endpoint
+var web3 = new Web3(new Web3.providers.HttpProvider(
+    "http://testzvdky-dns-reg1.eastus.cloudapp.azure.com:8545"));
 
-app.use(function(req, res, next) {
-    console.log(req.method + " " + req.url);
-    next();
-});
+// Get the current nonce of the account
+web3.eth.getTransactionCount(accountAddress, function (err, nonce) {
+   var data = web3.eth.contract(abi).at(address).postMsg.getData("Hello World");
+   var rawTx = {
+     nonce: nonce,
+     gasPrice: '0x00',
+     gasLimit: '0x2FAF080',
+     to: address,
+     value: '0x00',
+     data: data
+   }
+   var tx = new ethereumjs(rawTx);
 
-app.use(express.static("public"));
+   tx.sign(privateKey);
 
-app.get("/ratings", function(req, res) {
-  res.sendFile(path.join(__dirname + "/public/ratings.html"));
-});
-
-var abi = [
-	{
-		"constant": false,
-		"inputs": [
-			{
-				"name": "projectID",
-				"type": "uint256"
-  			},
-			{
-				"name": "creativity",
-				"type": "uint256"
-			},
-			{
-				"name": "technicalComplexity",
-				"type": "uint256"
-			},
-			{
-				"name": "bestPractices",
-				"type": "uint256"
-			}
-		],
-		"name": "addRating",
-		"outputs": [
-			{
-				"name": "ratingID",
-				"type": "uint256"
-			}
-		],
-		"payable": true,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [
-			{
-				"name": "index",
-				"type": "uint256"
-			}
-		],
-		"name": "getRating",
-		"outputs": [
-			{
-				"name": "projectID",
-				"type": "uint256"
-			},
-			{
-				"name": "creativity",
-				"type": "uint256"
-			},
-			{
-				"name": "technicalComplexity",
-				"type": "uint256"
-			},
-			{
-				"name": "bestPractices",
-				"type": "uint256"
-			}
-		],
-		"payable": true,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "getRatingsCount",
-		"outputs": [
-			{
-				"name": "count",
-				"type": "uint256"
-			}
-		],
-		"payable": true,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"name": "id",
-				"type": "uint256"
-			}
-		],
-		"name": "newRating",
-		"type": "event"
-	}
-];
-
-contractInstance = new web3.eth.Contract(abi, contract);
-
-app.get("/count", function (req, res) {
-	contractInstance.methods.getRatingsCount().call(function(error, count) {
-		if (error) {
-			res.status(500).send(error);
-		}
-		else {
-			res.status = 200;
-			res.json(count);
-		}
-	});
-});
-
-app.get("/rating/:index", function (req, res) {
-	contractInstance.methods.getRating(parseInt(req.params.index)).call(function(error, rating) {
-		if (error) {
-			res.status(500).send(error);
-		}
-		else {
-			res.status = 200;
-			res.json({
-				"projectID": parseInt(rating.projectID),
-				"creativity": parseInt(rating.creativity),
-        "technicalComplexity": parseInt(rating.technicalComplexity),
-        "bestPractices": parseInt(rating.bestPractices)
-			});
-		}
-	});
-});
-
-app.post("/add", function (req, res) {
-  contractInstance.methods.addRating(
-    parseInt(req.body.projectID),
-    parseInt(req.body.creativity),
-    parseInt(req.body.technicalComplexity),
-    parseInt(req.body.bestPractices)
-  ).send({ from: account, gas: 0 }, function(error, transactionHash) {
-    if (error) {
-      res.status(500).send(error)	;
-    }
-    else {
-      res.status = 200;
-      res.json({ id: 0 });
-    }
-  }).catch(function(err) {
-    res.status(500).send(err)
-  });
-});
-
-app.listen(httpPort, function () {
-	console.log("Listening on port " + httpPort);
-});
+   var raw = '0x' + tx.serialize().toString('hex');
+   web3.eth.sendRawTransaction(raw, function (txErr, transactionHash) {
+     console.log("TX Hash: " + transactionHash);
+     console.log("Error: " + txErr);
+   });
+ });
