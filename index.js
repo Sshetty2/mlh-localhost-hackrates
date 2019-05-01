@@ -4,10 +4,11 @@ var bodyParser = require('body-parser');
 var path = require('path');
 var app = express();
 
-var etherUrl = process.env.ETHER_URL || "";
-var account = process.env.ACCOUNT_ADDRESS || "";
-var accountPassword = process.env.ACCOUNT_PASSWORD || "";
-var contract = process.env.CONTRACT_ADDRESS || "";
+// RPC endpoint
+var etherUrl = process.env.ETHER_URL || "http://ethirgqw4-dns-reg1.eastus.cloudapp.azure.com:8540";
+// from metamask senders ethereum address
+var account = process.env.ACCOUNT_ADDRESS || "0x03A61f773a412c9dBd99Ae2c4f40dF6380Cc23CE";
+var contract = process.env.CONTRACT_ADDRESS || "0xb0e5015db317b4a7402e9dfa99a04642745b8a79847b01e67152ab2f84a7b25a";
 
 var httpPort = process.env.PORT || 3000;
 var web3 = new Web3();
@@ -156,7 +157,7 @@ app.post("/add", function (req, res) {
     parseInt(req.body.creativity),
     parseInt(req.body.technicalComplexity),
     parseInt(req.body.bestPractices)
-  ).send({ from: account, gas: 500000 }, function(error, transactionHash) {
+  ).send({ from: account, gas: 0 }, function(error, transactionHash) {
     if (error) {
       res.status(500).send(error)	;
     }
